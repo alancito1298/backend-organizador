@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Docente {
+  id            Int           @id @default(autoincrement())
+  nombre        String
+  apellido      String
+  email         String        @unique
+  telefono      String?
+  proveedorAuth String?
+  creadoEn      DateTime      @default(now())
+
+  cursos        Curso[]
+  agenda        Agenda[]
+  bibliografia  Bibliografia[]
+  horarios      Horario[]
+  suscripcion   Suscripcion?
+}
+
+/* ===================== */
+
+model Curso {
+  id        Int      @id @default(autoincrement())
+  escuela   String
+  anio      String
+  materia   String
+
+  docenteId Int
+  docente   Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+
+  alumnos         AlumnoCurso[]
+  planificaciones Planificacion[]
+  documentos      Documento[]
+}
+
+/* ===================== */
+
+model Alumno {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  dni       String?
+  contacto  String?
+
+  cursos    AlumnoCurso[]
+}
+
+/* ===================== */
+
+model AlumnoCurso {
+  id       Int @id @default(autoincrement())
+
+  alumnoId Int
+  cursoId  Int
+
+  alumno   Alumno @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  curso    Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+
+  asistencias Asistencia[]
+  notas       Nota[]
+
+  @@unique([alumnoId, cursoId])
+}
+
+/* ===================== */
+
+model Asistencia {
+  id             Int      @id @default(autoincrement())
+  fecha          DateTime
+  estado         EstadoAsistencia
+
+  alumnoCursoId  Int
+  alumnoCurso    AlumnoCurso @relation(fields: [alumnoCursoId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Nota {
+  id             Int      @id @default(autoincrement())
+  tipo           TipoNota
+  fecha          DateTime
+  trimestre      Int
+  nota           Float
+
+  alumnoCursoId  Int
+  alumnoCurso    AlumnoCurso @relation(fields: [alumnoCursoId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Agenda {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime
+  descripcion String
+
+  docenteId   Int
+  docente     Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Planificacion {
+  id        Int      @id @default(autoincrement())
+  tema      String
+  link      String
+  fecha     DateTime?
+
+  cursoId   Int
+  curso     Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Documento {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  tipo      TipoDocumento
+  link      String
+
+  cursoId   Int
+  curso     Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Bibliografia {
+  id        Int      @id @default(autoincrement())
+  tema      String
+  link      String
+
+  docenteId Int
+  docente   Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Horario {
+  id          Int      @id @default(autoincrement())
+  dia         DiaSemana
+  hora        String
+  descripcion String?
+
+  docenteId   Int
+  docente     Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+
+model Suscripcion {
+  id          Int      @id @default(autoincrement())
+  estado      String
+  proveedor   String
+  fechaInicio DateTime
+  fechaFin    DateTime?
+
+  docenteId   Int      @unique
+  docente     Docente  @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+}
+
+/* ===================== */
+/* ======= ENUMS ======= */
+
+enum EstadoAsistencia {
+  presente_buen_concepto
+  presente_mal_concepto
+  ausente
+}
+
+enum TipoNota {
+  TP
+  Examen
+  Final
+}
+
+enum TipoDocumento {
+  pdf
+  docx
+}
+
+enum DiaSemana {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+}
