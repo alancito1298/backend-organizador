@@ -1,62 +1,59 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from 'prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
 
 @Injectable()
 export class CursosService {
-    constructor(private prisma: PrismaService){}
+  constructor(private prisma: PrismaService) {}
 
-//Crea Curso
-create(dto: CreateCursoDto){
+  // CREATE
+  create(dto: CreateCursoDto) {
     return this.prisma.curso.create({
-        data: {
-            escuela: dto.escuela,
-            anio: dto.anio,
-            materia: dto.materia,
-            docente:{
-                connect: { id: dto.docenteId},
-            }
+      data: {
+        escuela: dto.escuela,
+        anio: dto.anio,
+        materia: dto.materia,
+        docente: {
+          connect: { id: dto.docenteId },
+        },
+      },
+    });
+  }
 
-        }
-    })
+  // READ ALL
+  findAll() {
+    return this.prisma.curso.findMany({
+      include: {
+        docente: true,
+      },
+    });
+  }
 
-}
-
-//Lee todo
-
-findAll(){
-    return this.prisma.curso.findMany(
-        {include:{
-            docente: true,
-        }}
-    )
-}
-
-//busca uno
-async findOne(id: number) {
+  // READ ONE
+  async findOne(id: number) {
     const curso = await this.prisma.curso.findUnique({
       where: { id },
       include: {
         docente: true,
       },
     });
+
     if (!curso) {
-        throw new NotFoundException('Curso no encontrado');
-      }
-  
-      return curso;
+      throw new NotFoundException('Curso no encontrado');
     }
 
-// leer por docente   
-    findByDocente(docenteId: number) {
-        return this.prisma.curso.findMany({
-          where: { docenteId },
-        });
-      }
+    return curso;
+  }
 
-// actualizar docente
+  // READ BY DOCENTE
+  findByDocente(docenteId: number) {
+    return this.prisma.curso.findMany({
+      where: { docenteId },
+    });
+  }
+
+  // UPDATE
   async update(id: number, dto: UpdateCursoDto) {
     await this.findOne(id);
 
@@ -66,19 +63,13 @@ async findOne(id: number) {
     });
   }
 
-// borrar docente
-async remove(id: number) {
+  // DELETE
+  async remove(id: number) {
     await this.findOne(id);
 
     return this.prisma.curso.delete({
       where: { id },
     });
   }
-
 }
-
-
-
-
-
 
