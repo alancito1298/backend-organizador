@@ -63,7 +63,7 @@ model AlumnoCurso {
   curso    Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
 
   asistencias Asistencia[]
-  notas       Nota[]
+  notas       Calificacion[]
 
   @@unique([alumnoId, cursoId])
 }
@@ -80,18 +80,9 @@ model Asistencia {
     @@unique([fecha, alumnoCursoId])
 }
 
-/* ===================== */
 
-model Nota {
-  id             Int      @id @default(autoincrement())
-  tipo           TipoNota
-  fecha          DateTime
-  trimestre      Int
-  nota           Float
 
-  alumnoCursoId  Int
-  alumnoCurso    AlumnoCurso @relation(fields: [alumnoCursoId], references: [id], onDelete: Cascade)
-}
+
 
 /* ===================== */
 
@@ -191,4 +182,22 @@ enum DiaSemana {
   Miercoles
   Jueves
   Viernes
+}
+
+enum TipoEvaluacion {
+  trabajo_practico
+  examen
+  final
+}
+
+model Calificacion {
+  id              Int            @id @default(autoincrement())
+  valor           Float
+  fecha           DateTime
+  trimestre       Int
+
+  tipo            TipoEvaluacion
+
+  alumnoCursoId   Int
+  alumnoCurso     AlumnoCurso @relation(fields: [alumnoCursoId], references: [id], onDelete: Cascade)
 }
