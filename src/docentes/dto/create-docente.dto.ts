@@ -1,8 +1,20 @@
+import { IsEmail, IsOptional, IsString } from 'class-validator';
+
 export class CreateDocenteDto {
-    nombre: string;
-    apellido: string;
-    email: string;
-    telefono?: string;
-    proveedorAuth?: string;
-  }
-  
+  @IsString()
+  nombre: string;
+
+  @IsString()
+  apellido: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+
+  @IsOptional()
+  @IsString()
+  proveedorAuth?: string;
+}

@@ -10,6 +10,8 @@ import { AlumnosCursosModule } from './alumnos-cursos/alumnos-cursos.module';
 import { AsistenciasModule } from './asistencias/asistencias.module';
 import { CalificacionesModule } from './calificaciones/calificaciones.module';
 
+import { AgendaModule } from './agenda/agenda.module';
+
 @Module({
   imports: [
     PrismaModule,
@@ -19,6 +21,7 @@ import { CalificacionesModule } from './calificaciones/calificaciones.module';
     AlumnosCursosModule,
     AsistenciasModule,
     CalificacionesModule,
+    AgendaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
