@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDocenteDto } from './dto/create-docente.dto';
 import { UpdateDocenteDto } from './dto/update-docente.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DocentesService {
@@ -10,9 +11,16 @@ export class DocentesService {
 
 
 //Crea docente
- create(dto: CreateDocenteDto) {
+async create(dto: CreateDocenteDto) {
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+
   return this.prisma.docente.create({
-    data: dto,
+    data: {
+      nombre: dto.nombre,
+      apellido: dto.apellido,
+      email: dto.email,
+      password: hashedPassword, 
+    },
   });
 }
 

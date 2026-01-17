@@ -12,10 +12,11 @@ model Docente {
   nombre        String
   apellido      String
   email         String        @unique
+  password      String
   telefono      String?
   proveedorAuth String?
   creadoEn      DateTime      @default(now())
-
+  existe        Boolean @default(true)
   cursos        Curso[]
   agenda        Agenda[]
   bibliografia  Bibliografia[]
@@ -33,6 +34,7 @@ model Curso {
 
   docenteId Int
   docente   Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
+
 
   alumnos         AlumnoCurso[]
   planificaciones Planificacion[]

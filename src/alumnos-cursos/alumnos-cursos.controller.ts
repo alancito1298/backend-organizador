@@ -1,13 +1,13 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { AlumnosCursosService } from './alumnos-cursos.service';
-import { CreateInscripcionDto } from './dto/create-inscripcion.dto';
+import { CreateAlumnoCursoDto } from './dto/create-inscripcion.dto';
 
 @Controller('inscripciones')
 export class AlumnosCursosController {
   constructor(private readonly service: AlumnosCursosService) {}
 
   @Post()
-  create(@Body() dto: CreateInscripcionDto) {
+  create(@Body() dto: CreateAlumnoCursoDto) {
     return this.service.create(dto);
   }
 
