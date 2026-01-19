@@ -7,41 +7,41 @@ import { UpdateAgendaDto } from './dto/update-agenda.dto';
 export class AgendaService {
   constructor(private prisma: PrismaService) {}
 
-  // Crear evento
-  create(dto: CreateAgendaDto) {
+  /**
+   * Crear evento en agenda del docente
+   */
+  create(dto: CreateAgendaDto, docenteId: number) {
     return this.prisma.agenda.create({
       data: {
         fecha: new Date(dto.fecha),
         descripcion: dto.descripcion,
-        docenteId: dto.docenteId,
+        docenteId,
       },
     });
   }
 
-  // Agenda por docente (ordenada por fecha)
-  findByDocente(docenteId: number) {
+  /**
+   * Obtener agenda del docente logueado
+   */
+  findAllByDocente(docenteId: number) {
     return this.prisma.agenda.findMany({
       where: { docenteId },
       orderBy: { fecha: 'asc' },
     });
   }
 
-  // Editar evento
-  async update(id: number, dto: UpdateAgendaDto) {
-    const evento = await this.prisma.agenda.findUnique({ where: { id } });
-    if (!evento) throw new NotFoundException('Evento no encontrado');
-
-    return this.prisma.agenda.update({
-      where: { id },
-      data: {
-        descripcion: dto.descripcion,
-        fecha: dto.fecha ? new Date(dto.fecha) : undefined,
-      },
+  /**
+   * Eliminar evento (solo si es del docente)
+   */
+  async remove(id: number, docenteId: number) {
+    const evento = await this.prisma.agenda.findFirst({
+      where: { id, docenteId },
     });
-  }
 
-  // Eliminar evento
-  remove(id: number) {
+    if (!evento) {
+      throw new NotFoundException('Evento no encontrado');
+    }
+
     return this.prisma.agenda.delete({
       where: { id },
     });

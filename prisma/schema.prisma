@@ -31,7 +31,7 @@ model Curso {
   escuela   String
   anio      String
   materia   String
-
+  existe        Boolean @default(true)
   docenteId Int
   docente   Docente @relation(fields: [docenteId], references: [id], onDelete: Cascade)
 

@@ -1,45 +1,35 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-  } from '@nestjs/common';
-  import { AgendaService } from './agenda.service';
-  import { CreateAgendaDto } from './dto/create-agenda.dto';
-  import { UpdateAgendaDto } from './dto/update-agenda.dto';
-  
-  @Controller('agenda')
-  export class AgendaController {
-    constructor(private readonly agendaService: AgendaService) {}
-  
-    // Crear evento
-    @Post()
-    create(@Body() dto: CreateAgendaDto) {
-      return this.agendaService.create(dto);
-    }
-  
-    // Agenda del docente
-    @Get('docente/:id')
-    findByDocente(@Param('id') id: string) {
-      return this.agendaService.findByDocente(Number(id));
-    }
-  
-    // Editar evento
-    @Put(':id')
-    update(
-      @Param('id') id: string,
-      @Body() dto: UpdateAgendaDto,
-    ) {
-      return this.agendaService.update(Number(id), dto);
-    }
-  
-    // Eliminar evento
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-      return this.agendaService.remove(Number(id));
-    }
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { AgendaService } from './agenda.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateAgendaDto } from './dto/create-agenda.dto';
+
+@UseGuards(JwtAuthGuard)
+@Controller('agenda')
+export class AgendaController {
+  constructor(private readonly agendaService: AgendaService) {}
+
+  @Post()
+  create(@Body() dto: CreateAgendaDto, @Req() req: any) {
+    return this.agendaService.create(dto, req.user.id);
   }
-  
+
+  @Get()
+  findAll(@Req() req: any) {
+    return this.agendaService.findAllByDocente(req.user.id);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+    return this.agendaService.remove(id, req.user.id);
+  }
+}

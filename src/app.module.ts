@@ -11,6 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 import { AuthModule } from './auth/auth.module';
+import { HorariosModule } from './horarios/horarios.module';
+
 
 @Module({
   imports: [
@@ -23,12 +25,15 @@ import { AuthModule } from './auth/auth.module';
     CalificacionesModule,
     AgendaModule,
     AlumnosCursosModule,
+    HorariosModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+   
   ],
+ 
 })
 export class AppModule {}

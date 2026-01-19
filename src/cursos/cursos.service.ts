@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
 
@@ -7,35 +7,45 @@ import { UpdateCursoDto } from './dto/update-curso.dto';
 export class CursosService {
   constructor(private prisma: PrismaService) {}
 
-  // CREATE
-  create(dto: CreateCursoDto) {
+  /**
+   * CREAR CURSO
+   * El docenteId viene del token (NO del frontend)
+   */
+  create(dto: CreateCursoDto, docenteId: number) {
     return this.prisma.curso.create({
       data: {
         escuela: dto.escuela,
         anio: dto.anio,
         materia: dto.materia,
-        docente: {
-          connect: { id: dto.docenteId },
-        },
+        docenteId,
       },
     });
   }
 
-  // READ ALL
-  findAll() {
+  /**
+   * TRAER TODOS LOS CURSOS DEL DOCENTE LOGUEADO
+   */
+  findAllByDocente(docenteId: number) {
     return this.prisma.curso.findMany({
-      include: {
-        docente: true,
+      where: {
+        docenteId,
+        existe: true,
+      },
+      orderBy: {
+        id: 'asc',
       },
     });
   }
 
-  // READ ONE
-  async findOne(id: number) {
-    const curso = await this.prisma.curso.findUnique({
-      where: { id },
-      include: {
-        docente: true,
+  /**
+   * TRAER UN CURSO ESPECÍFICO (Y VERIFICAR QUE SEA DEL DOCENTE)
+   */
+  async findOneByDocente(id: number, docenteId: number) {
+    const curso = await this.prisma.curso.findFirst({
+      where: {
+        id,
+        docenteId,
+        existe: true,
       },
     });
 
@@ -46,16 +56,16 @@ export class CursosService {
     return curso;
   }
 
-  // READ BY DOCENTE
-  findByDocente(docenteId: number) {
-    return this.prisma.curso.findMany({
-      where: { docenteId },
-    });
-  }
-
-  // UPDATE
-  async update(id: number, dto: UpdateCursoDto) {
-    await this.findOne(id);
+  /**
+   * ACTUALIZAR CURSO (SOLO SI ES DEL DOCENTE)
+   */
+  async update(
+    id: number,
+    dto: UpdateCursoDto,
+    docenteId: number,
+  ) {
+    // Verificamos propiedad
+    await this.findOneByDocente(id, docenteId);
 
     return this.prisma.curso.update({
       where: { id },
@@ -63,13 +73,17 @@ export class CursosService {
     });
   }
 
-  // DELETE
-  async remove(id: number) {
-    await this.findOne(id);
+  /**
+   * ELIMINAR CURSO (SOFT DELETE)
+   */
+  async remove(id: number, docenteId: number) {
+    await this.findOneByDocente(id, docenteId);
 
-    return this.prisma.curso.delete({
+    return this.prisma.curso.update({
       where: { id },
+      data: {
+        existe: false,
+      },
     });
   }
 }
-
