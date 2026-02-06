@@ -12,6 +12,10 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 import { AuthModule } from './auth/auth.module';
 import { HorariosModule } from './horarios/horarios.module';
+import { PlanificacionesModule } from './planificaciones/planificaciones.module';
+import { BibliografiaService } from './bibliografia/bibliografia.service';
+import { BibliografiaController } from './bibliografia/bibliografia.controller';
+import { BibliografiaModule } from './bibliografia/bibliografia.module';
 
 
 @Module({
@@ -26,14 +30,18 @@ import { HorariosModule } from './horarios/horarios.module';
     AgendaModule,
     AlumnosCursosModule,
     HorariosModule,
+    PlanificacionesModule,
+    BibliografiaModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    BibliografiaService,
    
   ],
+  controllers: [BibliografiaController],
  
 })
 export class AppModule {}

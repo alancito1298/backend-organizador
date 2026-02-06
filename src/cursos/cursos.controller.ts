@@ -12,13 +12,13 @@ import { CursosService } from './cursos.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateCursoDto } from './dto/create-curso.dto';
 
-@UseGuards(JwtAuthGuard) // 🔐 Protege TODO el controller
+@UseGuards(JwtAuthGuard) // Protege TODO el controller
 @Controller('cursos')
 export class CursosController {
   constructor(private readonly cursosService: CursosService) {}
 
   /**
-   * Crear un curso (del docente logueado)
+   * Crear un curso 
    */
   @Post()
   create(@Body() dto: CreateCursoDto, @Req() req: any) {
@@ -36,7 +36,7 @@ export class CursosController {
   }
 
   /**
-   * Obtener un curso puntual (solo si es mío)
+   * Obtener un curso puntual
    */
   @Get(':id')
   findOne(
