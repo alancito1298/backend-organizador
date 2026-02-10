@@ -1,4 +1,4 @@
-/*import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateHorarioDto } from './dto/create-horario.dto';
 
@@ -6,9 +6,7 @@ import { CreateHorarioDto } from './dto/create-horario.dto';
 export class HorariosService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Crear horario semanal
-   *
+
   create(dto: CreateHorarioDto, docenteId: number) {
     return this.prisma.horario.create({
       data: {
@@ -20,9 +18,7 @@ export class HorariosService {
     });
   }
 
-  **
-   * Obtener horarios del docente
-   *
+
   findByDocente(docenteId: number) {
     return this.prisma.horario.findMany({
       where: { docenteId },
@@ -33,13 +29,10 @@ export class HorariosService {
     });
   }
 
-  /**
-   * Eliminar horario
-  
+
   async remove(id: number, docenteId: number) {
     return this.prisma.horario.deleteMany({
       where: { id, docenteId },
     });
   }
 }
-*/

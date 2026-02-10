@@ -1,5 +1,5 @@
 import { IsDateString, IsEnum, IsInt, IsNumber } from 'class-validator';
-//import { TipoEvaluacion } from '@prisma/client';
+import { TipoEvaluacion } from '@prisma/client';
 
 export class CreateCalificacionDto {
   @IsNumber()
@@ -11,8 +11,8 @@ export class CreateCalificacionDto {
   @IsInt()
   trimestre: number;
 
- //@IsEnum(TipoEvaluacion)
-  //tipo: TipoEvaluacion;
+ @IsEnum(TipoEvaluacion)
+  tipo: TipoEvaluacion;
 
   @IsInt()
   alumnoCursoId: number;
