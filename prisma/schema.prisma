@@ -187,11 +187,17 @@ enum DiaSemana {
 }
 
 enum TipoEvaluacion {
-  trabajo_practico
-  examen
-  final
+trabajo_practico
+Examen
+final
 }
-
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+}
 model Calificacion {
   id              Int            @id @default(autoincrement())
   valor           Float
