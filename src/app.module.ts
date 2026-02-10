@@ -16,6 +16,7 @@ import { PlanificacionesModule } from './planificaciones/planificaciones.module'
 import { BibliografiaService } from './bibliografia/bibliografia.service';
 import { BibliografiaController } from './bibliografia/bibliografia.controller';
 import { BibliografiaModule } from './bibliografia/bibliografia.module';
+import { PingController } from './ping/ping.controller';
 
 
 @Module({
@@ -41,7 +42,7 @@ import { BibliografiaModule } from './bibliografia/bibliografia.module';
     BibliografiaService,
    
   ],
-  controllers: [BibliografiaController],
+  controllers: [BibliografiaController, PingController],
  
 })
 export class AppModule {}

@@ -5,15 +5,20 @@ import express from 'express';
 
 const server = express();
 
-export const createServer = async () => {
+async function bootstrap() {
   const app = await NestFactory.create(
     AppModule,
     new ExpressAdapter(server),
   );
 
-  app.enableCors();
-  await app.init();
-  return server;
-};
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
 
-createServer();
+  await app.init();
+}
+
+bootstrap();
+
+export default server;
