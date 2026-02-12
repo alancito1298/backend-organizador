@@ -5,7 +5,7 @@ import { CursosModule } from './cursos/cursos.module';
 import { AlumnosModule } from './alumnos/alumnos.module';
 import { AlumnosCursosModule } from './alumnos-cursos/alumnos-cursos.module';
 import { AsistenciasModule } from './asistencias/asistencias.module';
-import { CalificacionesModule } from './calificaciones/calificaciones.module';
+
 import { AgendaModule } from './agenda/agenda.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -17,7 +17,7 @@ import { BibliografiaService } from './bibliografia/bibliografia.service';
 import { BibliografiaController } from './bibliografia/bibliografia.controller';
 import { BibliografiaModule } from './bibliografia/bibliografia.module';
 import { PingController } from './ping/ping.controller';
-
+import { CalificacionesModule } from './calificaciones/calificaciones.module';
 
 @Module({
   imports: [
@@ -33,6 +33,7 @@ import { PingController } from './ping/ping.controller';
     HorariosModule,
     PlanificacionesModule,
     BibliografiaModule,
+    
   ],
   providers: [
     {

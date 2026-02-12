@@ -1,32 +1,18 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../src/app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
-
-const server = express();
-
-let cachedApp: any;
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  if (!cachedApp) {
-    const app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(server),
-    );
+  const app = await NestFactory.create(AppModule);
 
-    app.enableCors({
-      origin: '*',
-      credentials: true,
-    });
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
 
-    await app.init();
-    cachedApp = server;
-  }
+  const PORT = process.env.PORT || 3000;
+  await app.listen(PORT);
 
-  return cachedApp;
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 }
 
-export default async function handler(req: any, res: any) {
-  const app = await bootstrap();
-  app(req, res);
-}
+bootstrap();
