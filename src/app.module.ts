@@ -16,13 +16,19 @@ import { PlanificacionesModule } from './planificaciones/planificaciones.module'
 import { BibliografiaService } from './bibliografia/bibliografia.service';
 import { BibliografiaController } from './bibliografia/bibliografia.controller';
 import { BibliografiaModule } from './bibliografia/bibliografia.module';
-import { PingController } from './ping/ping.controller';
+
 import { CalificacionesModule } from './calificaciones/calificaciones.module';
+import { HealthModule } from './health/health.module';
+
+
+
+
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
+    
     DocentesModule,
     CursosModule,
     AlumnosModule,
@@ -33,6 +39,7 @@ import { CalificacionesModule } from './calificaciones/calificaciones.module';
     HorariosModule,
     PlanificacionesModule,
     BibliografiaModule,
+    HealthModule,
     
   ],
   providers: [
@@ -43,7 +50,7 @@ import { CalificacionesModule } from './calificaciones/calificaciones.module';
     BibliografiaService,
    
   ],
-  controllers: [BibliografiaController, PingController],
+  controllers: [BibliografiaController],
  
 })
 export class AppModule {}
