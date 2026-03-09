@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import serverless from 'serverless-http';
+
+let server;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,9 +15,9 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3001',
     'https://organizador-rho.vercel.app',
-    'https://organizador-dowo.vercel.app', 
+    'https://organizador-dowo.vercel.app',
   ];
-  
+
   app.enableCors({
     origin: (origin, callback) => {
       logger.log(`Request desde origin: ${origin ?? 'sin origin'}`);
@@ -36,10 +39,15 @@ async function bootstrap() {
     }),
   );
 
-  const PORT = process.env.PORT || 3001;
-  await app.listen(PORT);
+  await app.init();
 
-  logger.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverless(expressApp);
 }
 
-bootstrap();
+export default async function handler(req, res) {
+  if (!server) {
+    server = await bootstrap();
+  }
+  return server(req, res);
+}
