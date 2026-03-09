@@ -49,4 +49,17 @@ export class PlanificacionesService {
       orderBy: { fecha: 'asc' },
     });
   }
+  async findByDocente(docenteId: number) {
+    return this.prisma.planificacion.findMany({
+      where: {
+        curso: { docenteId },
+      },
+      include: {
+        curso: {
+          select: { id: true, materia: true, anio: true, escuela: true },
+        },
+      },
+      orderBy: { fecha: 'asc' },
+    });
+  }
 }

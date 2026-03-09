@@ -12,6 +12,7 @@ import {
   import { JwtAuthGuard } from '../auth/jwt-auth.guard';
   import { CreatePlanificacionDto } from './dto/create-planificacion.dto';
   
+  
   @UseGuards(JwtAuthGuard)
   @Controller('planificaciones')
   export class PlanificacionesController {
@@ -42,5 +43,9 @@ import {
         req.user.id,
       );
     }
+    @Get()
+    findByDocente(@Req() req: any) {
+      return this.planificacionesService.findByDocente(req.user.id);
+    } 
   }
   

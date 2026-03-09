@@ -31,4 +31,10 @@ export class CalificacionesController {
     return 'calificaciones ok';
   }
   
+  @Get('curso/:cursoId')
+  findByCurso(@Param('cursoId') cursoId: string) {
+    return this.service.findByCurso(Number(cursoId));
+  }
 }
+
+

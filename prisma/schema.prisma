@@ -164,6 +164,7 @@ enum EstadoAsistencia {
   presente_buen_concepto
   presente_mal_concepto
   ausente
+  justificada
 }
 
 

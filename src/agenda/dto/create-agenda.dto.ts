@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsString } from 'class-validator';
+import { IsDateString, IsString } from 'class-validator';
 
 export class CreateAgendaDto {
   @IsDateString()
@@ -6,7 +6,5 @@ export class CreateAgendaDto {
 
   @IsString()
   descripcion: string;
-
-  @IsInt()
-  docenteId: number;
+  
 }

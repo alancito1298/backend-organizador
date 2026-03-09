@@ -42,4 +42,24 @@ export class CalificacionesService {
   remove(id: number) {
     return this.prisma.calificacion.delete({ where: { id } });
   }
+
+  async findByCurso(cursoId: number) {
+    return this.prisma.calificacion.findMany({
+      where: {
+        alumnoCurso: {
+          cursoId: cursoId,
+        },
+      },
+      include: {
+        alumnoCurso: {
+          include: {
+            alumno: true,
+          },
+        },
+      },
+      orderBy: {
+        fecha: 'asc',
+      },
+    });
+  }
 }

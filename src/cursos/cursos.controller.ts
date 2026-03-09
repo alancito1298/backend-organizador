@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   ParseIntPipe,
+  Delete
 } from '@nestjs/common';
 import { CursosService } from './cursos.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -45,5 +46,13 @@ export class CursosController {
   ) {
     const docenteId = req.user.id;
     return this.cursosService.findOneByDocente(id, docenteId);
+  }
+  @Delete(':id')
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    const docenteId = req.user.id;
+    return this.cursosService.remove(id, docenteId);
   }
 }
