@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
-import serverless from 'serverless-http';
-
-let server;
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { SuscripcionGuard } from './auth/suscripcion.guard';
+import { Reflector } from '@nestjs/core';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,22 +12,13 @@ async function bootstrap() {
 
   const logger = new Logger('Bootstrap');
 
-  const allowedOrigins = [
-    'http://localhost:3001',
-    'https://organizador-rho.vercel.app',
-    'https://organizador-dowo.vercel.app',
-  ];
-
   app.enableCors({
-    origin: (origin, callback) => {
-      logger.log(`Request desde origin: ${origin ?? 'sin origin'}`);
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        logger.warn(`Origin bloqueado por CORS: ${origin}`);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: [
+      'http://localhost:3001',
+      'https://organizador-rho.vercel.app',
+      'https://organizador-dowo.vercel.app',
+      'https://backend-organizador.vercel.app',
+    ],
     credentials: true,
   });
 
@@ -39,15 +30,14 @@ async function bootstrap() {
     }),
   );
 
-  await app.init();
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(
+    new JwtAuthGuard(reflector),
+    app.get(SuscripcionGuard),
+  );
 
-  const expressApp = app.getHttpAdapter().getInstance();
-  return serverless(expressApp);
+  await app.listen(3000);
+  logger.log('Backend corriendo en http://localhost:3000');
 }
 
-export default async function handler(req, res) {
-  if (!server) {
-    server = await bootstrap();
-  }
-  return server(req, res);
-}
+bootstrap();

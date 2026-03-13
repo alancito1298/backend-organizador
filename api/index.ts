@@ -1,32 +1,51 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
+import { ValidationPipe } from '@nestjs/common';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
+import { SuscripcionGuard } from '../src/auth/suscripcion.guard';
+import { Reflector } from '@nestjs/core';
+import serverless from 'serverless-http';
 
-const server = express();
-
-let cachedApp: any;
+let cachedServer;
 
 async function bootstrap() {
-  if (!cachedApp) {
-    const app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(server),
-    );
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug'],
+  });
 
-    app.enableCors({
-      origin: '*',
-      credentials: true,
-    });
+  app.enableCors({
+    origin: [
+      'http://localhost:3001',
+      'https://organizador-rho.vercel.app',
+      'https://organizador-dowo.vercel.app',
+      'https://backend-organizador.vercel.app',
+    ],
+    credentials: true,
+  });
 
-    await app.init();
-    cachedApp = server;
-  }
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  return cachedApp;
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(
+    new JwtAuthGuard(reflector),
+    app.get(SuscripcionGuard),
+  );
+
+  await app.init();
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverless(expressApp);
 }
 
-export default async function handler(req: any, res: any) {
-  const app = await bootstrap();
-  app(req, res);
+export default async function handler(req, res) {
+  if (!cachedServer) {
+    cachedServer = await bootstrap();
+  }
+  return cachedServer(req, res);
 }

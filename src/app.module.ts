@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from 'prisma/prisma.module';
+import { PrismaModule } from './prisma/prisma.module';
 import { DocentesModule } from './docentes/docentes.module';
 import { CursosModule } from './cursos/cursos.module';
 import { AlumnosModule } from './alumnos/alumnos.module';
@@ -19,7 +19,10 @@ import { BibliografiaModule } from './bibliografia/bibliografia.module';
 
 import { CalificacionesModule } from './calificaciones/calificaciones.module';
 import { HealthModule } from './health/health.module';
-
+import { PlanesModule } from './planes/planes.module';
+import { SuscripcionesModule } from './suscripciones/suscripciones.module';
+import { PagosModule } from './pagos/pagos.module';
+import { SuscripcionGuard } from './auth/suscripcion.guard';
 
 
 
@@ -40,14 +43,19 @@ import { HealthModule } from './health/health.module';
     PlanificacionesModule,
     BibliografiaModule,
     HealthModule,
+    PlanesModule,
+    SuscripcionesModule,
+    PagosModule,
     
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    
     },
     BibliografiaService,
+    SuscripcionGuard
    
   ],
   controllers: [BibliografiaController],

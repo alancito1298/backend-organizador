@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateDocenteDto } from './dto/create-docente.dto';
 import { UpdateDocenteDto } from './dto/update-docente.dto';
 import * as bcrypt from 'bcrypt';
@@ -8,61 +12,77 @@ import * as bcrypt from 'bcrypt';
 export class DocentesService {
   constructor(private prisma: PrismaService) {}
 
+  async create(dto: CreateDocenteDto) {
+    const docenteExistente = await this.prisma.docente.findUnique({
+      where: { email: dto.email },
+    });
 
+    if (docenteExistente) {
+      throw new ConflictException('El email ya está registrado');
+    }
 
-//Crea docente
-async create(dto: CreateDocenteDto) {
-  const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-  return this.prisma.docente.create({
-    data: {
-      nombre: dto.nombre,
-      apellido: dto.apellido,
-      email: dto.email,
-      password: hashedPassword, 
-    },
-  });
-}
+    const resultado = await this.prisma.$transaction(async (tx) => {
+      const docente = await tx.docente.create({
+        data: {
+          nombre:    dto.nombre,
+          apellido:  dto.apellido,
+          email:     dto.email,
+          password:  hashedPassword,
+          proveedorAuth: 'ninguno',
+        },
+      });
 
-// Trae * docentes
-findAll() {
-  return this.prisma.docente.findMany();
-}
+      await tx.suscripcion.create({
+        data: {
+          docenteId:        docente.id,
+          planId:           1,
+          estado:           'trial',
+          proveedor:        'ninguno',  // ← campo obligatorio
+          fechaInicio:      new Date(),
+          fechaTrialInicio: new Date(),
+          fechaTrialFin:    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          autoRenovacion:   false,
+        },
+      });
 
-//Leer uno
-async findOne(id:number){
-  const docente = await this.prisma.docente.findUnique({
-    where: { id },
-  });
-  
-  if (!docente) {
-    throw new NotFoundException('Docente no encontrado');
+      return docente;
+    });
+
+    return resultado;
   }
-  
-  return docente;
+
+  findAll() {
+    return this.prisma.docente.findMany();
+  }
+
+  async findOne(id: number) {
+    const docente = await this.prisma.docente.findUnique({
+      where: { id },
+    });
+
+    if (!docente) {
+      throw new NotFoundException('Docente no encontrado');
+    }
+
+    return docente;
+  }
+
+  async update(id: number, dto: UpdateDocenteDto) {
+    await this.findOne(id);
+
+    return this.prisma.docente.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+
+    return this.prisma.docente.delete({
+      where: { id },
+    });
+  }
 }
-
-
-//Actualizar docente
-async update(id: number, dto: UpdateDocenteDto) {
-  await this.findOne(id); // valida existencia
-
-  return this.prisma.docente.update({
-    where: { id },
-    data: dto,
-  });
-}
-
- // Borra Docente
- async remove(id: number) {
-  await this.findOne(id); // valida existencia
-
-  return this.prisma.docente.delete({
-    where: { id },
-  });
-
-
-}}
-
-
-

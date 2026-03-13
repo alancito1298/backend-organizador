@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
 
@@ -11,7 +11,36 @@ export class CursosService {
    * CREAR CURSO
    * El docenteId viene del token (NO del frontend)
    */
-  create(dto: CreateCursoDto, docenteId: number) {
+   async create(dto: CreateCursoDto, docenteId: number) {
+
+    // 1️⃣ buscar suscripción del docente
+    const suscripcion = await this.prisma.suscripcion.findUnique({
+      where: { docenteId },
+      include: {
+        plan: true
+      }
+    });
+  
+    if (!suscripcion) {
+      throw new NotFoundException('El docente no tiene suscripción');
+    }
+  
+    // 2️⃣ contar cursos actuales
+    const cursosActuales = await this.prisma.curso.count({
+      where: {
+        docenteId,
+        existe: true
+      }
+    });
+  
+    // 3️⃣ verificar límite del plan
+    if (cursosActuales >= suscripcion.plan.maxcursos) {
+      throw new Error(
+        `Has alcanzado el límite de cursos de tu plan (${suscripcion.plan.maxcursos})`
+      );
+    }
+  
+    // 4️⃣ crear curso
     return this.prisma.curso.create({
       data: {
         escuela: dto.escuela,
@@ -20,8 +49,8 @@ export class CursosService {
         docenteId,
       },
     });
+  
   }
-
   /**
    * TRAER TODOS LOS CURSOS DEL DOCENTE LOGUEADO
    */
