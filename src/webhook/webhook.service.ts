@@ -1,13 +1,12 @@
-
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MercadoPagoConfig, PreApproval } from 'mercadopago';
  
 const PLAN_MAP: Record<string, { planId: number; periodo: string }> = {
-  'd9333165a97b4e60a9b87f27b13c6676': { planId: 1, periodo: 'mensual' },   // Básico Mensual
-  'f597ba1d700440b7b40139c8060f78dc': { planId: 1, periodo: 'anual'   },   // Básico Anual
-  '00418792d857442da35980be23928b2a': { planId: 2, periodo: 'mensual' },   // Plus Mensual
-  '055a8d3ffb0f403eb1376ed38adde4ba': { planId: 2, periodo: 'anual'   },   // Plus Anual
+  'd9333165a97b4e60a9b87f27b13c6676': { planId: 1, periodo: 'mensual' },
+  'f597ba1d700440b7b40139c8060f78dc': { planId: 1, periodo: 'anual'   },
+  '00418792d857442da35980be23928b2a': { planId: 2, periodo: 'mensual' },
+  '055a8d3ffb0f403eb1376ed38adde4ba': { planId: 2, periodo: 'anual'   },
 };
  
 @Injectable()
@@ -24,7 +23,6 @@ export class WebhookService {
   async procesarNotificacion(body: any) {
     this.logger.log(`Webhook recibido: ${JSON.stringify(body)}`);
  
-    // MercadoPago envía distintos tipos de notificaciones
     const tipo = body.type || body.topic;
     const id   = body.data?.id || body.id;
  
@@ -42,29 +40,30 @@ export class WebhookService {
  
   private async procesarSuscripcion(preapprovalId: string) {
     try {
-      const client     = new PreApproval(this.mp);
+      const client      = new PreApproval(this.mp);
       const preapproval = await client.get({ id: preapprovalId }) as any;
  
       this.logger.log(`PreApproval status: ${preapproval.status}`);
-      this.logger.log(`PreApproval payer: ${JSON.stringify(preapproval.payer_email)}`);
+      this.logger.log(`external_reference: ${preapproval.external_reference}`);
  
-      const email      = preapproval.payer_email;
-      const planMpId   = preapproval.preapproval_plan_id;
-      const estado     = preapproval.status; // authorized, paused, cancelled
+      const externalRef = preapproval.external_reference;
+      const planMpId    = preapproval.preapproval_plan_id;
+      const estado      = preapproval.status;
  
-      if (!email || !planMpId) {
-        this.logger.warn('Sin email o planId en preapproval');
-        return;
+      // Buscar docente por external_reference (docenteId)
+      let docenteId: number | null = null;
+ 
+      if (externalRef && !isNaN(Number(externalRef))) {
+        docenteId = Number(externalRef);
+      } else {
+        // Fallback: buscar por email
+        const email   = preapproval.payer_email;
+        const docente = await this.prisma.docente.findUnique({ where: { email } });
+        docenteId = docente?.id ?? null;
       }
  
-      // Buscar docente por email
-      const docente = await this.prisma.docente.findUnique({
-        where: { email },
-        include: { suscripcion: true },
-      });
- 
-      if (!docente) {
-        this.logger.warn(`Docente no encontrado para email: ${email}`);
+      if (!docenteId) {
+        this.logger.warn('No se pudo identificar al docente');
         return;
       }
  
@@ -75,33 +74,35 @@ export class WebhookService {
       }
  
       const estadoSuscripcion =
-        estado === 'authorized' ? 'activa' :
-        estado === 'paused'     ? 'pausada' :
+        estado === 'authorized' ? 'activa'    :
+        estado === 'paused'     ? 'pausada'   :
         estado === 'cancelled'  ? 'cancelada' : 'inactiva';
  
       const fechaFin = planInfo.periodo === 'anual'
         ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
         : new Date(Date.now() + 30  * 24 * 60 * 60 * 1000);
  
-      if (docente.suscripcion) {
-        // Actualizar suscripción existente
+      const suscripcionExistente = await this.prisma.suscripcion.findUnique({
+        where: { docenteId },
+      });
+ 
+      if (suscripcionExistente) {
         await this.prisma.suscripcion.update({
-          where: { docenteId: docente.id },
+          where: { docenteId },
           data: {
-            estado:                estadoSuscripcion,
-            planId:                planInfo.planId,
-            periodo:               planInfo.periodo,
-            proveedor:             'mercadopago',
+            estado:                 estadoSuscripcion,
+            planId:                 planInfo.planId,
+            periodo:                planInfo.periodo,
+            proveedor:              'mercadopago',
             externalSubscriptionId: preapprovalId,
             fechaFin,
-            actualizadoEn:         new Date(),
+            actualizadoEn:          new Date(),
           },
         });
       } else {
-        // Crear suscripción nueva
         await this.prisma.suscripcion.create({
           data: {
-            docenteId:              docente.id,
+            docenteId,
             planId:                 planInfo.planId,
             estado:                 estadoSuscripcion,
             proveedor:              'mercadopago',
@@ -114,7 +115,7 @@ export class WebhookService {
         });
       }
  
-      this.logger.log(`Suscripción actualizada para ${email}: ${estadoSuscripcion}`);
+      this.logger.log(`Suscripción actualizada para docente ${docenteId}: ${estadoSuscripcion}`);
     } catch (err) {
       this.logger.error('Error procesando suscripción:', err);
     }
