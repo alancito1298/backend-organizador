@@ -28,13 +28,16 @@ export class AuthService {
     //  Hashear password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    //  Crear docente
     const docente = await this.prisma.docente.create({
       data: {
         nombre: dto.nombre,
         apellido: dto.apellido,
         email: dto.email,
         password: hashedPassword,
+        telefono: dto.telefono,
+        provincia: dto.provincia,
+        localidad: dto.localidad,
+        fechaNacimiento: dto.fechaNacimiento,
       },
     });
 

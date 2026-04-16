@@ -18,4 +18,5 @@ export class SuscripcionesController {
     return this.suscripcionesService.crearCheckout(body.planMpId, docenteId);
   }
 
+  
 }

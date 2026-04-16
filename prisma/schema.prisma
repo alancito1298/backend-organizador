@@ -8,21 +8,24 @@ datasource db {
 }
 
 model Docente {
-  id            Int             @id @default(autoincrement())
-  nombre        String
-  apellido      String
-  email         String          @unique
-  password      String
-  telefono      String?
-  proveedorAuth String?
-  creadoEn      DateTime        @default(now())
-  existe        Boolean         @default(true)
-  agenda        Agenda[]
-  bibliografia  Bibliografia[]
-  cursos        Curso[]
-  HistorialPlan HistorialPlan[]
-  horarios      Horario[]
-  suscripcion   Suscripcion?
+  id              Int             @id @default(autoincrement())
+  nombre          String
+  apellido        String
+  email           String          @unique
+  password        String
+  telefono        String?
+  proveedorAuth   String?
+  creadoEn        DateTime        @default(now())
+  existe          Boolean         @default(true)
+  provincia       String?
+  localidad       String?
+  fechaNacimiento String?
+  agenda          Agenda[]
+  bibliografia    Bibliografia[]
+  cursos          Curso[]
+  HistorialPlan   HistorialPlan[]
+  horarios        Horario[]
+  suscripcion     Suscripcion?
 }
 
 model Curso {
