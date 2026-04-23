@@ -6,6 +6,7 @@ import { Public } from './public.decorator';
 import { Get, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { SkipSuscripcion } from '../auth/skip-suscripcion';
 
 @Controller('auth')
 export class AuthController {
@@ -35,6 +36,7 @@ export class AuthController {
   
 
   @UseGuards(JwtAuthGuard)
+  @SkipSuscripcion()
   @Get('me')
   async getProfile(@Req() req) {
     const docenteId = Number(req.user.id || req.user.sub);

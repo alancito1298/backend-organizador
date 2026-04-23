@@ -7,6 +7,7 @@ import {
   import { Reflector } from '@nestjs/core';
   import { PrismaService } from '../prisma/prisma.service';
   import { IS_PUBLIC_KEY } from './public.decorator';
+  import { SKIP_SUSCRIPCION_KEY } from './skip-suscripcion';
   
   @Injectable()
   export class SuscripcionGuard implements CanActivate {
@@ -25,7 +26,14 @@ import {
       if (isPublic) {
         return true;
       }
-  
+      
+      const skipSuscripcion = this.reflector.getAllAndOverride<boolean>(
+        SKIP_SUSCRIPCION_KEY,
+        [context.getHandler(), context.getClass()],
+      );
+      
+      if (skipSuscripcion) return true
+
       const request = context.switchToHttp().getRequest();
       const user = request.user;
   
@@ -42,7 +50,7 @@ import {
         throw new ForbiddenException('No tienes suscripción activa');
       }
   
-      if (docente.suscripcion.estado !== 'activa' && docente.suscripcion.estado !== 'prueba') {
+      if (docente.suscripcion.estado !== 'activa' && docente.suscripcion.estado !== 'prueba' && docente.suscripcion.estado !== 'trial') {
         throw new ForbiddenException('Tu suscripción no está activa');
       }
   
