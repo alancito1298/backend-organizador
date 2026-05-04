@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from '../../src/auth/public.decorator'; // ajustá ruta si hace falta
+import { Public } from '../auth/public.decorator';
 
 @Controller('test')
 export class HealthController {

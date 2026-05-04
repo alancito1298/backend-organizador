@@ -9,27 +9,13 @@ import serverless from 'serverless-http';
 let cachedServer;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug'],
-  });
+  const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: [
-      'http://localhost:3001',
-      'https://organizador-rho.vercel.app',
-      'https://organizador-dowo.vercel.app',
-      'https://backend-organizador.vercel.app',
-    ],
-    credentials: true,
+    origin: '*',
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe());
 
   const reflector = app.get(Reflector);
   app.useGlobalGuards(
