@@ -18,7 +18,7 @@ export class SuscripcionesService {
       include: { plan: true },
     });
 
-    if (!suscripcion) return null;
+    if (!suscripcion) return { estado: 'sin_suscripcion', plan: null, diasRestantes: null };
 
    
     const diasRestantes = suscripcion.fechaFin
@@ -38,31 +38,11 @@ export class SuscripcionesService {
     const docente = await this.prisma.docente.findUnique({
       where: { id: docenteId },
     });
-
+  
     if (!docente) throw new Error('Docente no encontrado');
-
-    const client = new PreApproval(this.mp);
-
-    const preapproval = await client.create({
-      body: {
-        preapproval_plan_id: planMpId,
-        payer_email: docente.email,
-        external_reference: String(docenteId),
-        back_url: `${
-          process.env.FRONTEND_URL ??
-          'https://organizador-rho.vercel.app'
-        }/pago-exitoso`,
-        status: 'pending',
-        free_trial: {
-          frequency: 30,
-          frequency_type: 'days',
-        },
-      } as any,
-    });
-
-    return {
-      checkoutUrl: (preapproval as any).init_point,
-      id: preapproval.id,
-    };
+  
+    const checkoutUrl = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planMpId}&external_reference=${docenteId}&payer_email=${encodeURIComponent(docente.email)}`;
+  
+    return { checkoutUrl };
   }
 }

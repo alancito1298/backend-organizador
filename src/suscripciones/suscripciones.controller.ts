@@ -9,10 +9,10 @@ export class SuscripcionesController {
   constructor(private suscripcionesService: SuscripcionesService) {}
 
   @Get('estado')
-  obtenerEstado(@Req() req) {
-    const docenteId = req.user.sub;
-    return this.suscripcionesService.obtenerSuscripcion(docenteId);
-  }
+obtenerEstado(@Req() req) {
+  const docenteId = req.user.id; 
+  return this.suscripcionesService.obtenerSuscripcion(docenteId);
+}
 
   @SkipSuscripcion()
 @Post('checkout')

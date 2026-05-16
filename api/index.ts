@@ -1,9 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
-import { SuscripcionGuard } from '../src/auth/suscripcion.guard';
-import { Reflector } from '@nestjs/core';
 import serverless from 'serverless-http';
 
 let cachedServer;
@@ -15,12 +12,11 @@ async function bootstrap() {
     origin: '*',
   });
 
-  app.useGlobalPipes(new ValidationPipe());
-
-  const reflector = app.get(Reflector);
-  app.useGlobalGuards(
-    new JwtAuthGuard(reflector),
-    app.get(SuscripcionGuard),
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
   );
 
   await app.init();

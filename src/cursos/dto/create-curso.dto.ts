@@ -9,7 +9,4 @@ export class CreateCursoDto {
 
   @IsString()
   materia: string;
-
-  @IsInt()
-  docenteId: number;
 }
