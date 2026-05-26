@@ -8,24 +8,25 @@ datasource db {
 }
 
 model Docente {
-  id              Int             @id @default(autoincrement())
-  nombre          String
-  apellido        String
-  email           String          @unique
-  password        String
-  telefono        String?
-  proveedorAuth   String?
-  creadoEn        DateTime        @default(now())
-  existe          Boolean         @default(true)
-  provincia       String?
-  localidad       String?
-  fechaNacimiento String?
-  agenda          Agenda[]
-  bibliografia    Bibliografia[]
-  cursos          Curso[]
-  HistorialPlan   HistorialPlan[]
-  horarios        Horario[]
-  suscripcion     Suscripcion?
+  id                      Int                    @id @default(autoincrement())
+  nombre                  String
+  apellido                String
+  email                   String                 @unique
+  password                String
+  telefono                String?
+  proveedorAuth           String?
+  creadoEn                DateTime               @default(now())
+  existe                  Boolean                @default(true)
+  provincia               String?
+  localidad               String?
+  fechaNacimiento         String?
+  agenda                  Agenda[]
+  bibliografia            Bibliografia[]
+  cursos                  Curso[]
+  HistorialPlan           HistorialPlan[]
+  horarios                Horario[]
+  suscripcion             Suscripcion?
+  suscripcionesPendientes SuscripcionPendiente[]
 }
 
 model Curso {
@@ -67,6 +68,7 @@ model Asistencia {
   fecha         DateTime
   estado        EstadoAsistencia
   alumnoCursoId Int
+  trimestre     Int
   alumnoCurso   AlumnoCurso      @relation(fields: [alumnoCursoId], references: [id], onDelete: Cascade)
 
   @@unique([fecha, alumnoCursoId])
@@ -187,6 +189,15 @@ model HistorialPlan {
 
   @@index([docenteId], map: "idx_historial_docente")
   @@index([fechaCambio], map: "idx_historial_fecha")
+}
+
+model SuscripcionPendiente {
+  id        Int      @id @default(autoincrement())
+  codigo    String   @unique
+  docenteId Int
+  planMpId  String
+  creadoEn  DateTime @default(now()) @db.Timestamp(6)
+  docente   Docente  @relation(fields: [docenteId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum EstadoAsistencia {

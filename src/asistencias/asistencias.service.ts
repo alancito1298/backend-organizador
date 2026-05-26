@@ -13,28 +13,50 @@ export class AsistenciasService {
       data: {
         fecha: new Date(dto.fecha),
         estado: dto.estado,
+        trimestre: dto.trimestre,
         alumnoCursoId: dto.alumnoCursoId,
       },
     });
   }
 
   // Asistencias por curso (vía inscripción)
-  findByCurso(cursoId: number) {
+  findByCurso(
+    cursoId: number,
+    trimestre?: number
+  ) {
+  
     return this.prisma.asistencia.findMany({
+  
       where: {
+  
         alumnoCurso: {
-          cursoId: cursoId,
+          cursoId,
         },
+  
+        ...(trimestre && {
+          trimestre,
+        }),
+  
       },
+  
       include: {
+  
         alumnoCurso: {
+  
           include: {
             alumno: true,
           },
+  
         },
+  
       },
-      orderBy: { fecha: 'asc' },
+  
+      orderBy: {
+        fecha: 'asc',
+      },
+  
     });
+  
   }
 
   // Actualizar estado

@@ -21,6 +21,8 @@ import { SuscripcionesModule } from './suscripciones/suscripciones.module';
 import { PagosModule } from './pagos/pagos.module';
 import { SuscripcionGuard } from './auth/suscripcion.guard';
 import { WebhookModule } from './webhook/webhook.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+
 
 
 
@@ -29,7 +31,7 @@ import { WebhookModule } from './webhook/webhook.module';
   imports: [
     PrismaModule,
     AuthModule,
-    
+    DashboardModule,
     DocentesModule,
     CursosModule,
     AlumnosModule,
@@ -45,6 +47,7 @@ import { WebhookModule } from './webhook/webhook.module';
     SuscripcionesModule,
     PagosModule,
     WebhookModule,
+    DashboardModule,
     
   ],
   providers: [

@@ -1,10 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { MercadoPagoConfig, PreApproval } from 'mercadopago';
+import { MercadoPagoConfig } from 'mercadopago';
+import { randomUUID } from 'crypto';
+
+const PLAN_MAP: Record<string, { planId: number; periodo: string }> = {
+  'd9333165a97b4e60a9b87f27b13c6676': { planId: 1, periodo: 'mensual' },
+  'f597ba1d700440b7b40139c8060f78dc': { planId: 1, periodo: 'anual'   },
+  '00418792d857442da35980be23928b2a': { planId: 2, periodo: 'mensual' },
+  '055a8d3ffb0f403eb1376ed38adde4ba': { planId: 2, periodo: 'anual'   },
+};
 
 @Injectable()
 export class SuscripcionesService {
   private mp: MercadoPagoConfig;
+  private readonly logger = new Logger(SuscripcionesService.name);
 
   constructor(private prisma: PrismaService) {
     this.mp = new MercadoPagoConfig({
@@ -20,7 +29,6 @@ export class SuscripcionesService {
 
     if (!suscripcion) return { estado: 'sin_suscripcion', plan: null, diasRestantes: null };
 
-   
     const diasRestantes = suscripcion.fechaFin
       ? Math.ceil(
           (new Date(suscripcion.fechaFin).getTime() - Date.now()) /
@@ -28,21 +36,64 @@ export class SuscripcionesService {
         )
       : null;
 
-    return {
-      ...suscripcion,
-      diasRestantes,
-    };
+    return { ...suscripcion, diasRestantes };
   }
 
   async crearCheckout(planMpId: string, docenteId: number) {
-    const docente = await this.prisma.docente.findUnique({
-      where: { id: docenteId },
+    const planInfo = PLAN_MAP[planMpId];
+    if (!planInfo) throw new Error('Plan no reconocido');
+
+    // Generar código único para identificar al docente en el webhook
+    const codigo = randomUUID();
+
+    // Guardar código pendiente en BD
+    await this.prisma.suscripcionPendiente.create({
+      data: { codigo, docenteId, planMpId },
     });
-  
-    if (!docente) throw new Error('Docente no encontrado');
-  
-    const checkoutUrl = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planMpId}&external_reference=${docenteId}&payer_email=${encodeURIComponent(docente.email)}`;
-  
+
+    this.logger.log(`Código generado para docente ${docenteId}: ${codigo}`);
+
+    // Activar suscripción inmediatamente
+    const fechaFin = planInfo.periodo === 'anual'
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 30  * 24 * 60 * 60 * 1000);
+
+    const suscripcionExistente = await this.prisma.suscripcion.findUnique({
+      where: { docenteId },
+    });
+
+    if (suscripcionExistente) {
+      await this.prisma.suscripcion.update({
+        where: { docenteId },
+        data: {
+          estado:        'activa',
+          planId:        planInfo.planId,
+          periodo:       planInfo.periodo,
+          proveedor:     'mercadopago',
+          fechaFin,
+          actualizadoEn: new Date(),
+        },
+      });
+    } else {
+      await this.prisma.suscripcion.create({
+        data: {
+          docenteId,
+          planId:         planInfo.planId,
+          estado:         'activa',
+          proveedor:      'mercadopago',
+          periodo:        planInfo.periodo,
+          fechaInicio:    new Date(),
+          fechaFin,
+          autoRenovacion: true,
+        },
+      });
+    }
+
+    this.logger.log(`Suscripción activada para docente ${docenteId}`);
+
+    // Armar URL con external_reference = código único
+    const checkoutUrl = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${planMpId}&external_reference=${codigo}`;
+
     return { checkoutUrl };
   }
 }

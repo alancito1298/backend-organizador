@@ -10,4 +10,7 @@ export class CreateAsistenciaDto {
 
   @IsInt()
   alumnoCursoId: number;
+
+  @IsInt()
+  trimestre: number;
 }
