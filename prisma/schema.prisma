@@ -27,6 +27,7 @@ model Docente {
   horarios                Horario[]
   suscripcion             Suscripcion?
   suscripcionesPendientes SuscripcionPendiente[]
+  recuperaciones RecuperacionPassword[]
 }
 
 model Curso {
@@ -49,6 +50,15 @@ model Alumno {
   dni      String?
   contacto String?
   cursos   AlumnoCurso[]
+}
+
+model RecuperacionPassword {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  docenteId Int
+  expiresAt DateTime
+  usado     Boolean  @default(false)
+  docente   Docente  @relation(fields: [docenteId], references: [id], onDelete: Cascade)
 }
 
 model AlumnoCurso {
