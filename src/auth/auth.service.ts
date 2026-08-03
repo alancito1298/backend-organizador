@@ -6,15 +6,20 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Resend } from 'resend';
 import { randomUUID } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
   private resend:Resend;
+  private googleClient: OAuth2Client;
 
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { this.resend = new Resend(process.env.RESEND_API_KEY);}
+  ) {
+    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
 
   /**
    * REGISTRO DE DOCENTE
@@ -151,6 +156,48 @@ export class AuthService {
     return { message: 'Contraseña actualizada correctamente' };
   }
  
+  // =====================
+  // LOGIN / REGISTRO CON GOOGLE
+  // =====================
+  async loginWithGoogle(credential: string) {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload?.email) {
+      throw new UnauthorizedException('Token de Google inválido');
+    }
+
+    let docente = await this.prisma.docente.findUnique({
+      where: { email: payload.email },
+    });
+
+    let isNewUser = false;
+
+    if (!docente) {
+      isNewUser = true;
+      const randomPassword = await bcrypt.hash(randomUUID(), 10);
+
+      docente = await this.prisma.docente.create({
+        data: {
+          nombre: payload.given_name || payload.name || 'Docente',
+          apellido: payload.family_name || '',
+          email: payload.email,
+          password: randomPassword,
+          proveedorAuth: 'google',
+        },
+      });
+    }
+
+    return {
+      ...this.generarToken(docente.id, docente.email, docente.nombre),
+      isNewUser,
+    };
+  }
+
   private generarToken(id: number, email: string, nombre: string) {
     const payload = { sub: id, email, nombre };
     return { access_token: this.jwtService.sign(payload) };
