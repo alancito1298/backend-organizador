@@ -10,6 +10,7 @@ async function bootstrap() {
       'http://localhost:3001',
       'https://organizador-rho.vercel.app',
       'https://organizador-dowo.vercel.app',
+      'https://organizador-dowo-git-develop-alancito1298s-projects.vercel.app',
       'https://backend-organizador.vercel.app',
       'https://organizadordocente.com',       
       'https://www.organizadordocente.com',   

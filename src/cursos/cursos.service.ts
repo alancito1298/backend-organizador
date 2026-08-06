@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
@@ -35,7 +35,7 @@ export class CursosService {
   
     // 3️⃣ verificar límite del plan
     if (cursosActuales >= suscripcion.plan.maxcursos) {
-      throw new Error(
+      throw new ForbiddenException(
         `Has alcanzado el límite de cursos de tu plan (${suscripcion.plan.maxcursos})`
       );
     }
