@@ -20,4 +20,11 @@ export class SuscripcionesController {
     const docenteId = req.user.id;
     return this.suscripcionesService.crearCheckout(body.planMpId, docenteId);
   }
+
+  @SkipSuscripcion()
+  @Post('activar-gratis')
+  activarGratis(@Req() req) {
+    const docenteId = req.user.id;
+    return this.suscripcionesService.activarPlanGratis(docenteId);
+  }
 }

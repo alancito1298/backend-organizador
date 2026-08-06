@@ -96,4 +96,48 @@ export class SuscripcionesService {
 
     return { checkoutUrl };
   }
+
+  async activarPlanGratis(docenteId: number) {
+    const planGratis = await this.prisma.plan.findFirst({
+      where: { nombre: 'Gratis', activo: true },
+    });
+
+    if (!planGratis) throw new Error('Plan Gratis no configurado');
+
+    const suscripcionExistente = await this.prisma.suscripcion.findUnique({
+      where: { docenteId },
+    });
+
+    if (suscripcionExistente) {
+      await this.prisma.suscripcion.update({
+        where: { docenteId },
+        data: {
+          estado:         'activa',
+          planId:         planGratis.id,
+          periodo:        'gratis',
+          proveedor:      'gratis',
+          fechaFin:       null,
+          autoRenovacion: false,
+          actualizadoEn:  new Date(),
+        },
+      });
+    } else {
+      await this.prisma.suscripcion.create({
+        data: {
+          docenteId,
+          planId:         planGratis.id,
+          estado:         'activa',
+          proveedor:      'gratis',
+          periodo:        'gratis',
+          fechaInicio:    new Date(),
+          fechaFin:       null,
+          autoRenovacion: false,
+        },
+      });
+    }
+
+    this.logger.log(`Plan gratis activado para docente ${docenteId}`);
+
+    return { ok: true };
+  }
 }
