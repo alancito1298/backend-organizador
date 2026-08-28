@@ -4,43 +4,65 @@ import { CreateAlumnoDto } from './dto/create-alumno.dto'
 import  {UpdateAlumnoDto} from './dto/update-alumno.dto'
 
 @Injectable()
-
 export class AlumnosService {
-  constructor (private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
-  //crea alumno
+  // crea alumno
   create(dto: CreateAlumnoDto) {
     return this.prisma.alumno.create({
       data: dto,
-    })
+    });
   }
 
-  findAll () {
-    return this.prisma.alumno.findMany()
+  findAll(docenteId: number) {
+    return this.prisma.alumno.findMany({
+      where: {
+        cursos: {
+          some: {
+            curso: {
+              docenteId,
+              existe: true,
+            },
+          },
+        },
+      },
+    });
   }
 
-  // lee uno
-  async findOne (id: number) {
-    const alumno = await this.prisma.alumno.findUnique({
-      where: { id },
-    })
+  // lee uno (verificando pertenencia a cursos del docente)
+  async findOne(id: number, docenteId: number) {
+    const alumno = await this.prisma.alumno.findFirst({
+      where: {
+        id,
+        cursos: {
+          some: {
+            curso: {
+              docenteId,
+              existe: true,
+            },
+          },
+        },
+      },
+    });
     if (!alumno) {
-      throw new NotFoundException('Alumno no encontrado')
+      throw new NotFoundException('Alumno no encontrado');
     }
-    return alumno
+    return alumno;
   }
-
 
   async getPerfilAlumno(
     alumnoCursoId: number,
+    docenteId: number,
   ) {
-  
     const alumnoCurso =
-      await this.prisma.alumnoCurso.findUnique({
+      await this.prisma.alumnoCurso.findFirst({
         where: {
           id: alumnoCursoId,
+          curso: {
+            docenteId,
+            existe: true,
+          },
         },
-  
         include: {
           alumno: true,
           curso: true,
@@ -48,7 +70,7 @@ export class AlumnosService {
           notas: true,
         },
       });
-  
+
     if (!alumnoCurso) {
       throw new NotFoundException(
         'Alumno no encontrado',
@@ -325,8 +347,8 @@ const finales =
 
 
 // actualizar
-async update(id: number, dto: UpdateAlumnoDto) {
-    await this.findOne(id);
+  async update(id: number, dto: UpdateAlumnoDto, docenteId: number) {
+    await this.findOne(id, docenteId);
 
     return this.prisma.alumno.update({
       where: { id },
@@ -335,8 +357,8 @@ async update(id: number, dto: UpdateAlumnoDto) {
   }
 
   // borrar
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, docenteId: number) {
+    await this.findOne(id, docenteId);
 
     return this.prisma.alumno.delete({
       where: { id },

@@ -7,7 +7,17 @@ import { UpdateCalificacionDto } from './dto/update-calificacion.dto';
 export class CalificacionesService {
   constructor(private prisma: PrismaService) {}
 
-  create(dto: CreateCalificacionDto) {
+  async create(dto: CreateCalificacionDto, docenteId: number) {
+    const alumnoCurso = await this.prisma.alumnoCurso.findFirst({
+      where: {
+        id: dto.alumnoCursoId,
+        curso: { docenteId, existe: true },
+      },
+    });
+    if (!alumnoCurso) {
+      throw new NotFoundException('Inscripción no encontrada o no autorizada');
+    }
+
     return this.prisma.calificacion.create({
       data: {
         valor: dto.valor,
@@ -19,15 +29,32 @@ export class CalificacionesService {
     });
   }
 
-  findByAlumnoCurso(alumnoCursoId: number) {
+  async findByAlumnoCurso(alumnoCursoId: number, docenteId: number) {
+    const alumnoCurso = await this.prisma.alumnoCurso.findFirst({
+      where: {
+        id: alumnoCursoId,
+        curso: { docenteId, existe: true },
+      },
+    });
+    if (!alumnoCurso) {
+      throw new NotFoundException('Inscripción no encontrada');
+    }
+
     return this.prisma.calificacion.findMany({
       where: { alumnoCursoId },
       orderBy: { fecha: 'asc' },
     });
   }
 
-  async update(id: number, dto: UpdateCalificacionDto) {
-    const calificacion = await this.prisma.calificacion.findUnique({ where: { id } });
+  async update(id: number, dto: UpdateCalificacionDto, docenteId: number) {
+    const calificacion = await this.prisma.calificacion.findFirst({
+      where: {
+        id,
+        alumnoCurso: {
+          curso: { docenteId, existe: true },
+        },
+      },
+    });
     if (!calificacion) throw new NotFoundException('Calificación no encontrada');
 
     return this.prisma.calificacion.update({
@@ -39,11 +66,28 @@ export class CalificacionesService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number, docenteId: number) {
+    const calificacion = await this.prisma.calificacion.findFirst({
+      where: {
+        id,
+        alumnoCurso: {
+          curso: { docenteId, existe: true },
+        },
+      },
+    });
+    if (!calificacion) throw new NotFoundException('Calificación no encontrada');
+
     return this.prisma.calificacion.delete({ where: { id } });
   }
 
-  async findByCurso(cursoId: number) {
+  async findByCurso(cursoId: number, docenteId: number) {
+    const curso = await this.prisma.curso.findFirst({
+      where: { id: cursoId, docenteId, existe: true },
+    });
+    if (!curso) {
+      throw new NotFoundException('Curso no encontrado');
+    }
+
     return this.prisma.calificacion.findMany({
       where: {
         alumnoCurso: {

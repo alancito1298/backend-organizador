@@ -11,8 +11,9 @@ export class WebhookController {
   @HttpCode(200)
   async handleWebhook(
     @Body() body: any,
-    @Headers('x-signature') signature: string,
+    @Headers('x-signature') signature?: string,
+    @Headers('x-request-id') requestId?: string,
   ) {
-    return this.webhookService.procesarNotificacion(body);
+    return this.webhookService.procesarNotificacion(body, signature, requestId);
   }
 }

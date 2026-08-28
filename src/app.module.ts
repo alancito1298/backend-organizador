@@ -22,13 +22,16 @@ import { PagosModule } from './pagos/pagos.module';
 import { SuscripcionGuard } from './auth/suscripcion.guard';
 import { WebhookModule } from './webhook/webhook.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-
-
-
-
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60, // Límite general de 60 peticiones/min por IP
+      },
+    ]),
     PrismaModule,
     AuthModule,
     DashboardModule,
@@ -48,19 +51,19 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PagosModule,
     WebhookModule,
     DashboardModule,
-    
   ],
   providers: [
     {
       provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    
     },
     BibliografiaService,
-    SuscripcionGuard
-   
+    SuscripcionGuard,
   ],
   controllers: [BibliografiaController],
- 
 })
 export class AppModule {}

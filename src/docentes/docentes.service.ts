@@ -8,6 +8,20 @@ import { CreateDocenteDto } from './dto/create-docente.dto';
 import { UpdateDocenteDto } from './dto/update-docente.dto';
 import * as bcrypt from 'bcrypt';
 
+const DOCENTE_SELECT_SAFE = {
+  id: true,
+  nombre: true,
+  apellido: true,
+  email: true,
+  telefono: true,
+  proveedorAuth: true,
+  creadoEn: true,
+  existe: true,
+  provincia: true,
+  localidad: true,
+  fechaNacimiento: true,
+};
+
 @Injectable()
 export class DocentesService {
   constructor(private prisma: PrismaService) {}
@@ -32,6 +46,7 @@ export class DocentesService {
           password:  hashedPassword,
           proveedorAuth: 'ninguno',
         },
+        select: DOCENTE_SELECT_SAFE,
       });
 
       await tx.suscripcion.create({
@@ -39,7 +54,7 @@ export class DocentesService {
           docenteId:        docente.id,
           planId:           1,
           estado:           'trial',
-          proveedor:        'ninguno',  // ← campo obligatorio
+          proveedor:        'ninguno',
           fechaInicio:      new Date(),
           fechaTrialInicio: new Date(),
           fechaTrialFin:    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -53,13 +68,18 @@ export class DocentesService {
     return resultado;
   }
 
-  findAll() {
-    return this.prisma.docente.findMany();
+  findAll(docenteId: number) {
+    return this.prisma.docente.findMany({
+      where: { id: docenteId },
+      select: DOCENTE_SELECT_SAFE,
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, docenteId?: number) {
+    const targetId = docenteId || id;
     const docente = await this.prisma.docente.findUnique({
-      where: { id },
+      where: { id: targetId },
+      select: DOCENTE_SELECT_SAFE,
     });
 
     if (!docente) {
@@ -69,20 +89,24 @@ export class DocentesService {
     return docente;
   }
 
-  async update(id: number, dto: UpdateDocenteDto) {
-    await this.findOne(id);
+  async update(id: number, dto: UpdateDocenteDto, docenteId?: number) {
+    const targetId = docenteId || id;
+    await this.findOne(targetId);
 
     return this.prisma.docente.update({
-      where: { id },
+      where: { id: targetId },
       data: dto,
+      select: DOCENTE_SELECT_SAFE,
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, docenteId?: number) {
+    const targetId = docenteId || id;
+    await this.findOne(targetId);
 
     return this.prisma.docente.delete({
-      where: { id },
+      where: { id: targetId },
+      select: DOCENTE_SELECT_SAFE,
     });
   }
 }

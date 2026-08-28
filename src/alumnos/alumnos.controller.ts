@@ -6,6 +6,7 @@ import {
     Param,
     Post,
     Put,
+    Req,
   } from '@nestjs/common';
   import { AlumnosService } from './alumnos.service';
   import { CreateAlumnoDto } from './dto/create-alumno.dto';
@@ -23,17 +24,19 @@ export class AlumnosController {
   }
 
   @Get()
-  findAll() {
-    return this.alumnosService.findAll();
+  findAll(@Req() req: any) {
+    return this.alumnosService.findAll(req.user.id);
   }
 
   @Get('perfil/:alumnoCursoId')
   getPerfilAlumno(
     @Param('alumnoCursoId')
     alumnoCursoId: string,
+    @Req() req: any,
   ) {
     return this.alumnosService.getPerfilAlumno(
       Number(alumnoCursoId),
+      req.user.id,
     );
   }
 
@@ -41,9 +44,11 @@ export class AlumnosController {
   findOne(
     @Param('id')
     id: string,
+    @Req() req: any,
   ) {
     return this.alumnosService.findOne(
       Number(id),
+      req.user.id,
     );
   }
 
@@ -51,19 +56,23 @@ export class AlumnosController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateAlumnoDto,
+    @Req() req: any,
   ) {
     return this.alumnosService.update(
       Number(id),
       dto,
+      req.user.id,
     );
   }
 
   @Delete(':id')
   remove(
     @Param('id') id: string,
+    @Req() req: any,
   ) {
     return this.alumnosService.remove(
       Number(id),
+      req.user.id,
     );
   }
 }

@@ -6,48 +6,53 @@ import {
     Param,
     Post,
     Put,
+    Req,
   } from '@nestjs/common';
 import { DocentesService } from './docentes.service';
 import { CreateDocenteDto } from './dto/create-docente.dto';
 import { UpdateDocenteDto } from './dto/update-docente.dto';
 
-
-
 @Controller('docentes')
 export class DocentesController {
   constructor(private readonly docentesService: DocentesService) {}
 
-  //Crear
+  // Crear
   @Post()
-  create(@Body() dto: CreateDocenteDto){
+  create(@Body() dto: CreateDocenteDto) {
     return this.docentesService.create(dto);
   }
 
-  //lee todos los docentes
+  // Obtener perfil del docente autenticado
+  @Get('perfil')
+  getPerfil(@Req() req: any) {
+    return this.docentesService.findOne(req.user.id);
+  }
+
+  // lee todos los docentes (restringido a mi perfil)
   @Get()
-  findAll(){
-    return this.docentesService.findAll();
+  findAll(@Req() req: any) {
+    return this.docentesService.findAll(req.user.id);
   }
 
-  //lee un docente
+  // lee un docente (solo el propio)
   @Get(':id')
-  findOne(@Param('id') id:string){
-    return this.docentesService.findOne(Number(id));
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.docentesService.findOne(Number(id), req.user.id);
   }
 
-  //Actualizar docente
+  // Actualizar docente (solo el propio)
   @Put(':id')
   update(
     @Param('id') id: string,
     @Body() dto: UpdateDocenteDto,
-  ){
-    return this.docentesService.update(Number(id), dto)
+    @Req() req: any,
+  ) {
+    return this.docentesService.update(Number(id), dto, req.user.id);
   }
 
-//Borrar docente
-@Delete(':id')
-remove(@Param('id') id: string) {
-  return this.docentesService.remove(Number(id));
-}
-
+  // Borrar docente (solo el propio)
+  @Delete(':id')
+  remove(@Param('id') id: string, @Req() req: any) {
+    return this.docentesService.remove(Number(id), req.user.id);
+  }
 }

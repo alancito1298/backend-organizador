@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MercadoPagoConfig, PreApproval } from 'mercadopago';
+import * as crypto from 'crypto';
 
 const PLAN_MAP: Record<string, { planId: number; periodo: string }> = {
   'd9333165a97b4e60a9b87f27b13c6676': { planId: 1, periodo: 'mensual' },
@@ -20,11 +21,38 @@ export class WebhookService {
     });
   }
 
-  async procesarNotificacion(body: any) {
+  async procesarNotificacion(body: any, signatureHeader?: string, requestId?: string) {
     this.logger.log(`Webhook recibido: ${JSON.stringify(body)}`);
 
-    const tipo = body.type || body.topic;
-    const id   = body.data?.id || body.id;
+    // Validar firma HMAC si está configurada la clave secreta de webhook
+    const webhookSecret = process.env.MP_WEBHOOK_SECRET;
+    if (webhookSecret && signatureHeader) {
+      const parts = signatureHeader.split(',');
+      let ts: string | undefined;
+      let hash: string | undefined;
+
+      for (const part of parts) {
+        const [key, value] = part.split('=');
+        if (key.trim() === 'ts') ts = value.trim();
+        if (key.trim() === 'v1') hash = value.trim();
+      }
+
+      if (ts && hash && body?.data?.id) {
+        const manifest = `id:${body.data.id};request-id:${requestId || ''};ts:${ts};`;
+        const expectedHash = crypto
+          .createHmac('sha256', webhookSecret)
+          .update(manifest)
+          .digest('hex');
+
+        if (expectedHash !== hash) {
+          this.logger.warn('Firma de Webhook de MercadoPago inválida');
+          throw new UnauthorizedException('Firma de webhook inválida');
+        }
+      }
+    }
+
+    const tipo = body?.type || body?.topic;
+    const id   = body?.data?.id || body?.id;
 
     if (!tipo || !id) {
       this.logger.warn('Notificación sin tipo o id');
