@@ -7,7 +7,15 @@ import { UpdateAsistenciaDto } from './dto/update-asistencia.dto';
 export class AsistenciasService {
   constructor(private prisma: PrismaService) {}
 
-  // Crear asistencia (verificando pertenencia de la inscripción al docente)
+  // Calcular trimestre según fecha (Mar-May: 1, Jun-Ago: 2, Sep-Dic: 3)
+  private calcularTrimestre(fecha: Date): number {
+    const mes = fecha.getMonth() + 1;
+    if (mes <= 5) return 1;
+    if (mes <= 8) return 2;
+    return 3;
+  }
+
+  // Crear o actualizar asistencia (upsert) verificando pertenencia
   async create(dto: CreateAsistenciaDto, docenteId: number) {
     const alumnoCurso = await this.prisma.alumnoCurso.findFirst({
       where: {
@@ -19,11 +27,24 @@ export class AsistenciasService {
       throw new NotFoundException('Inscripción no encontrada o no autorizada');
     }
 
-    return this.prisma.asistencia.create({
-      data: {
-        fecha: new Date(dto.fecha),
+    const fechaDate = new Date(dto.fecha);
+    const trimestre = dto.trimestre ?? this.calcularTrimestre(fechaDate);
+
+    return this.prisma.asistencia.upsert({
+      where: {
+        fecha_alumnoCursoId: {
+          fecha: fechaDate,
+          alumnoCursoId: dto.alumnoCursoId,
+        },
+      },
+      update: {
         estado: dto.estado,
-        trimestre: dto.trimestre,
+        trimestre,
+      },
+      create: {
+        fecha: fechaDate,
+        estado: dto.estado,
+        trimestre,
         alumnoCursoId: dto.alumnoCursoId,
       },
     });

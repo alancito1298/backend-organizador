@@ -1,4 +1,4 @@
-import { IsDateString, IsEnum, IsInt } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsOptional } from 'class-validator';
 import { EstadoAsistencia } from '@prisma/client';
 
 export class CreateAsistenciaDto {
@@ -11,6 +11,7 @@ export class CreateAsistenciaDto {
   @IsInt()
   alumnoCursoId: number;
 
+  @IsOptional()
   @IsInt()
-  trimestre: number;
+  trimestre?: number;
 }
