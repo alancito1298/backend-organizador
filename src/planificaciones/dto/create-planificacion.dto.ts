@@ -5,7 +5,7 @@ export class CreatePlanificacionDto {
   @IsNotEmpty({ message: 'El tema es obligatorio' })
   tema: string;
 
-  @IsUrl({}, { message: 'El link debe ser una URL válida' })
+  @IsUrl({ require_tld: false }, { message: 'El link debe ser una URL válida' })
   link: string;
 
   @IsOptional()
