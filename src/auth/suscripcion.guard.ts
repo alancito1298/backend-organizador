@@ -46,20 +46,43 @@ import {
         include: { suscripcion: true },
       });
   
-      if (!docente?.suscripcion) {
+      let suscripcion = docente?.suscripcion;
+
+      if (!suscripcion && docente) {
+        const planGratis = await this.prisma.plan.findFirst({
+          where: { nombre: 'Gratis', activo: true },
+        });
+
+        if (planGratis) {
+          suscripcion = await this.prisma.suscripcion.create({
+            data: {
+              docenteId: docente.id,
+              planId: planGratis.id,
+              estado: 'activa',
+              proveedor: 'gratis',
+              periodo: 'gratis',
+              fechaInicio: new Date(),
+              fechaFin: null,
+              autoRenovacion: false,
+            },
+          });
+        }
+      }
+
+      if (!suscripcion) {
         throw new ForbiddenException('No tienes suscripción activa');
       }
-  
-      if (docente.suscripcion.estado !== 'activa' && docente.suscripcion.estado !== 'prueba' && docente.suscripcion.estado !== 'trial') {
+
+      if (suscripcion.estado !== 'activa' && suscripcion.estado !== 'prueba' && suscripcion.estado !== 'trial') {
         throw new ForbiddenException('Tu suscripción no está activa');
       }
-  
+
       const hoy = new Date();
-  
-      if (docente.suscripcion.fechaFin && docente.suscripcion.fechaFin < hoy) {
+
+      if (suscripcion.fechaFin && suscripcion.fechaFin < hoy) {
         throw new ForbiddenException('Tu suscripción ha vencido');
       }
-  
+
       return true;
     }
   }

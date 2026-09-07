@@ -50,6 +50,26 @@ export class AuthService {
       },
     });
 
+    // Asignar automáticamente Plan Gratis (4 cursos) para que tenga permisos inmediatos
+    const planGratis = await this.prisma.plan.findFirst({
+      where: { nombre: 'Gratis', activo: true },
+    });
+
+    if (planGratis) {
+      await this.prisma.suscripcion.create({
+        data: {
+          docenteId: docente.id,
+          planId: planGratis.id,
+          estado: 'activa',
+          proveedor: 'gratis',
+          periodo: 'gratis',
+          fechaInicio: new Date(),
+          fechaFin: null,
+          autoRenovacion: false,
+        },
+      });
+    }
+
     //  Generar token
     return this.generarToken(docente.id, docente.email, docente.nombre);
   }
@@ -190,6 +210,26 @@ export class AuthService {
           proveedorAuth: 'google',
         },
       });
+
+      // Asignar automáticamente Plan Gratis (4 cursos) para nuevo usuario de Google
+      const planGratis = await this.prisma.plan.findFirst({
+        where: { nombre: 'Gratis', activo: true },
+      });
+
+      if (planGratis) {
+        await this.prisma.suscripcion.create({
+          data: {
+            docenteId: docente.id,
+            planId: planGratis.id,
+            estado: 'activa',
+            proveedor: 'gratis',
+            periodo: 'gratis',
+            fechaInicio: new Date(),
+            fechaFin: null,
+            autoRenovacion: false,
+          },
+        });
+      }
     }
 
     return {

@@ -14,13 +14,35 @@ export class CursosService {
    async create(dto: CreateCursoDto, docenteId: number) {
 
     // 1️⃣ buscar suscripción del docente
-    const suscripcion = await this.prisma.suscripcion.findUnique({
+    let suscripcion = await this.prisma.suscripcion.findUnique({
       where: { docenteId },
       include: {
         plan: true
       }
     });
   
+    if (!suscripcion) {
+      const planGratis = await this.prisma.plan.findFirst({
+        where: { nombre: 'Gratis', activo: true },
+      });
+
+      if (planGratis) {
+        suscripcion = await this.prisma.suscripcion.create({
+          data: {
+            docenteId,
+            planId: planGratis.id,
+            estado: 'activa',
+            proveedor: 'gratis',
+            periodo: 'gratis',
+            fechaInicio: new Date(),
+            fechaFin: null,
+            autoRenovacion: false,
+          },
+          include: { plan: true },
+        });
+      }
+    }
+
     if (!suscripcion) {
       throw new NotFoundException('El docente no tiene suscripción');
     }
