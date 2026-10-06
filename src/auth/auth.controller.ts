@@ -4,7 +4,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { Public } from './public.decorator';
-import { Get, UseGuards, Req } from '@nestjs/common';
+import { Get, Delete, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 import { SkipSuscripcion } from '../auth/skip-suscripcion';
@@ -68,6 +68,21 @@ export class AuthController {
     });
 
     return docente;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @SkipSuscripcion()
+  @Delete('me')
+  async deleteAccount(@Req() req: any) {
+    const docenteId = Number(req.user.id || req.user.sub);
+
+    if (!docenteId) {
+      throw new Error('Token inválido');
+    }
+
+    return this.prisma.docente.delete({
+      where: { id: docenteId },
+    });
   }
 
   /**
