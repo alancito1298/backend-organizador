@@ -16,6 +16,7 @@ model Docente {
   telefono                String?
   proveedorAuth           String?
   creadoEn                DateTime               @default(now())
+  ultimoAcceso            DateTime?              @default(now())
   existe                  Boolean                @default(true)
   provincia               String?
   localidad               String?

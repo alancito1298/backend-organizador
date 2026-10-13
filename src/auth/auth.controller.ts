@@ -57,13 +57,15 @@ export class AuthController {
       throw new Error('Token inválido');
     }
 
-    const docente = await this.prisma.docente.findUnique({
+    const docente = await this.prisma.docente.update({
       where: { id: docenteId },
+      data: { ultimoAcceso: new Date() },
       select: {
         id: true,
         nombre: true,
         apellido: true,
         email: true,
+        ultimoAcceso: true,
       },
     });
 

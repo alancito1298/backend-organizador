@@ -16,6 +16,7 @@ const DOCENTE_SELECT_SAFE = {
   telefono: true,
   proveedorAuth: true,
   creadoEn: true,
+  ultimoAcceso: true,
   existe: true,
   provincia: true,
   localidad: true,

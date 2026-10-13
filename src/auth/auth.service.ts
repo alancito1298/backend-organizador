@@ -97,8 +97,14 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    //  Generar token
-    return this.generarToken(docente.id, docente.email,docente.nombre);
+    // Actualizar último acceso
+    await this.prisma.docente.update({
+      where: { id: docente.id },
+      data: { ultimoAcceso: new Date() },
+    });
+
+    // Generar token
+    return this.generarToken(docente.id, docente.email, docente.nombre);
   }
 
 
@@ -230,6 +236,13 @@ export class AuthService {
           },
         });
       }
+    }
+
+    if (!isNewUser) {
+      await this.prisma.docente.update({
+        where: { id: docente.id },
+        data: { ultimoAcceso: new Date() },
+      });
     }
 
     return {
