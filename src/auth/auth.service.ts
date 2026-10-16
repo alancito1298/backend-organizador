@@ -97,6 +97,9 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    // Verificar si es usuario 51 para notificar a Alan
+    await this.verificarYNotificarUsuarioEspecial(docente);
+
     // Actualizar último acceso
     await this.prisma.docente.update({
       where: { id: docente.id },
@@ -105,6 +108,59 @@ export class AuthService {
 
     // Generar token
     return this.generarToken(docente.id, docente.email, docente.nombre);
+  }
+
+  async verificarYNotificarUsuarioEspecial(docente: {
+    id: number;
+    email: string;
+    nombre: string;
+    apellido?: string | null;
+    ultimoAcceso: Date | null;
+  }) {
+    if (docente.id !== 51) return;
+
+    // Cooldown de 1 hora entre alertas consecutivas
+    const tiempoDesdeUltimo = docente.ultimoAcceso
+      ? Date.now() - new Date(docente.ultimoAcceso).getTime()
+      : Infinity;
+
+    const COOLDOWN_MS = 60 * 60 * 1000; // 1 hora
+    if (tiempoDesdeUltimo < COOLDOWN_MS) return;
+
+    try {
+      const horaArg = new Date().toLocaleString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        dateStyle: 'full',
+        timeStyle: 'medium',
+      });
+
+      const apellidoStr = docente.apellido ? ` ${docente.apellido.trim()}` : '';
+
+      await this.resend.emails.send({
+        from: 'noreply@organizadordocente.com',
+        to: 'alangerman98@yahoo.com.ar',
+        subject: '🔔 Alerta: Katherine (Usuario 51) ingresó a Organizador Docente',
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;">
+            <h2 style="color:#7c3aed;margin-top:0;">🔔 Usuario 51 Activo</h2>
+            <p style="font-size:16px;color:#334155;">
+              La docente <strong>${docente.nombre.trim()}${apellidoStr}</strong> acaba de ingresar a la app/web.
+            </p>
+            <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:16px 0;font-size:14px;color:#475569;border-left:4px solid #7c3aed;">
+              <p style="margin:4px 0;"><strong>ID:</strong> ${docente.id}</p>
+              <p style="margin:4px 0;"><strong>Email:</strong> ${docente.email}</p>
+              <p style="margin:4px 0;"><strong>Fecha y Hora:</strong> ${horaArg} (Arg)</p>
+            </div>
+            <p style="font-size:12px;color:#94a3b8;margin-top:20px;">
+              Notificación automática configurada para Alan.
+            </p>
+          </div>
+        `,
+      });
+      console.log('[ALERTA] Email enviado a alangerman98@yahoo.com.ar por ingreso de usuario 51');
+    } catch (err) {
+      console.error('[ALERTA] Error al enviar email de aviso por usuario 51:', err);
+    }
   }
 
 
@@ -239,6 +295,7 @@ export class AuthService {
     }
 
     if (!isNewUser) {
+      await this.verificarYNotificarUsuarioEspecial(docente);
       await this.prisma.docente.update({
         where: { id: docente.id },
         data: { ultimoAcceso: new Date() },

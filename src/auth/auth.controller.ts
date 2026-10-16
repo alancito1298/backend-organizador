@@ -57,6 +57,16 @@ export class AuthController {
       throw new Error('Token inválido');
     }
 
+    if (docenteId === 51) {
+      const docenteActual = await this.prisma.docente.findUnique({
+        where: { id: docenteId },
+        select: { id: true, email: true, nombre: true, apellido: true, ultimoAcceso: true },
+      });
+      if (docenteActual) {
+        await this.authService.verificarYNotificarUsuarioEspecial(docenteActual);
+      }
+    }
+
     const docente = await this.prisma.docente.update({
       where: { id: docenteId },
       data: { ultimoAcceso: new Date() },
