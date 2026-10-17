@@ -242,15 +242,21 @@ export class AuthService {
   // LOGIN / REGISTRO CON GOOGLE
   // =====================
   async loginWithGoogle(credential: string) {
-    const ticket = await this.googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    let ticket;
+    try {
+      ticket = await this.googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (error) {
+      console.error('[authService] Error al verificar token de Google:', error);
+      throw new UnauthorizedException('Token de Google inválido o no autorizado');
+    }
 
     const payload = ticket.getPayload();
 
     if (!payload?.email) {
-      throw new UnauthorizedException('Token de Google inválido');
+      throw new UnauthorizedException('Token de Google inválido (sin email)');
     }
 
     let docente = await this.prisma.docente.findUnique({
