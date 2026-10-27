@@ -242,11 +242,25 @@ export class AuthService {
   // LOGIN / REGISTRO CON GOOGLE
   // =====================
   async loginWithGoogle(credential: string) {
+    // Se aceptan varios Client IDs: el de la web (proyecto original) y el de la app móvil (proyecto nuevo).
+    // GOOGLE_CLIENT_ID puede contener varios IDs separados por coma.
+    const audiences = Array.from(
+      new Set(
+        [
+          ...(process.env.GOOGLE_CLIENT_ID ?? '').split(','),
+          '868455775736-8gvm8ad8kdj0206iifc2qka0043c5s46.apps.googleusercontent.com',
+          '973174699212-l3j5ng16i134rioq6nnli3r4l18ocots.apps.googleusercontent.com',
+        ]
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+
     let ticket;
     try {
       ticket = await this.googleClient.verifyIdToken({
         idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
+        audience: audiences,
       });
     } catch (error) {
       console.error('[authService] Error al verificar token de Google:', error);
