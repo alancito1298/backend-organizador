@@ -11,10 +11,18 @@ import {
 import { DocentesService } from './docentes.service';
 import { CreateDocenteDto } from './dto/create-docente.dto';
 import { UpdateDocenteDto } from './dto/update-docente.dto';
+import { Public } from '../auth/public.decorator';
 
 @Controller('docentes')
 export class DocentesController {
   constructor(private readonly docentesService: DocentesService) {}
+
+  // Contador público de docentes registrados (último ID)
+  @Public()
+  @Get('public/contador')
+  getContador() {
+    return this.docentesService.getContadorPublico();
+  }
 
   // Crear
   @Post()

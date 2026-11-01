@@ -110,4 +110,14 @@ export class DocentesService {
       select: DOCENTE_SELECT_SAFE,
     });
   }
+
+  async getContadorPublico() {
+    const ultimo = await this.prisma.docente.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    return {
+      total: ultimo?.id ?? 89,
+    };
+  }
 }
