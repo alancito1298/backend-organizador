@@ -78,9 +78,9 @@ export class AuthService {
   async login(dto: LoginDto) {
     //  Buscar docente por email
    // console.log('DTO:', dto);
-    const docente = await this.prisma.docente.findUnique({
-      where: { email: dto.email },
-      
+    const emailNormalizado = dto.email?.trim().toLowerCase();
+    const docente = await this.prisma.docente.findFirst({
+      where: { email: { equals: emailNormalizado, mode: 'insensitive' } },
     });
 
     if (!docente) {
@@ -168,46 +168,68 @@ export class AuthService {
 // FORGOT PASSWORD
   // =====================
   async forgotPassword(email: string) {
-    const docente = await this.prisma.docente.findUnique({ where: { email } });
- 
+    const emailNormalizado = email?.trim().toLowerCase();
+    if (!emailNormalizado) {
+      return { message: 'Si el email existe recibirás un correo' };
+    }
+
+    const docente = await this.prisma.docente.findFirst({
+      where: { email: { equals: emailNormalizado, mode: 'insensitive' } },
+    });
+
     if (!docente) return { message: 'Si el email existe recibirás un correo' };
- 
+
     // Invalidar tokens anteriores
     await this.prisma.recuperacionPassword.updateMany({
       where: { docenteId: docente.id, usado: false },
       data: { usado: true },
     });
- 
-    const token     = randomUUID();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
- 
+
+    const token = randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
     await this.prisma.recuperacionPassword.create({
       data: { token, docenteId: docente.id, expiresAt },
     });
- 
-    const link = `${process.env.FRONTEND_URL ?? 'https://organizadordocente.com'}/reset-password?token=${token}`;
- 
-    await this.resend.emails.send({
-      from:    'noreply@organizadordocente.com',
-      to:      email,
-      subject: 'Recuperación de contraseña - Organizador Docente',
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
-          <h2 style="color:#4c1d95;">Recuperar contraseña</h2>
-          <p>Hola <strong>${docente.nombre}</strong>,</p>
-          <p>Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el botón para continuar:</p>
-          <a href="${link}" style="display:inline-block;margin:24px 0;background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
-            Restablecer contraseña
-          </a>
-          <p style="color:#6b7280;font-size:13px;">Este link expira en 1 hora. Si no solicitaste este cambio, ignorá este email.</p>
-        </div>
-      `,
-    });
- 
+
+    const frontendUrl = process.env.FRONTEND_URL ?? 'https://www.organizadordocente.com';
+    const link = `${frontendUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
+
+    try {
+      const resendResult = await this.resend.emails.send({
+        from: 'Organizador Docente <noreply@organizadordocente.com>',
+        to: docente.email,
+        subject: 'Recuperación de contraseña - Organizador Docente',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#ffffff;border-radius:12px;border:1px solid #ede9fe;">
+            <div style="text-align:center;margin-bottom:24px;">
+              <h2 style="color:#6d28d9;margin:0;">Organizador Docente</h2>
+              <p style="color:#6b7280;font-size:14px;margin-top:4px;">Recuperación de contraseña</p>
+            </div>
+            <p style="color:#1f2937;font-size:15px;">Hola <strong>${docente.nombre}</strong>,</p>
+            <p style="color:#4b5563;font-size:14px;line-height:1.5;">Recibimos una solicitud para restablecer la contraseña de tu cuenta docente. Hacé clic en el siguiente botón para crear una nueva clave:</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${link}" style="display:inline-block;background:#7c3aed;color:#ffffff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
+                Restablecer contraseña
+              </a>
+            </div>
+            <p style="color:#9ca3af;font-size:12px;text-align:center;">O copiá y pegá este enlace en tu navegador:<br><a href="${link}" style="color:#7c3aed;word-break:break-all;">${link}</a></p>
+            <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;">
+            <p style="color:#9ca3af;font-size:12px;line-height:1.4;">Este enlace expira en 24 horas. Si no solicitaste restablecer tu contraseña, podés ignorar este correo sin problemas.</p>
+          </div>
+        `,
+      });
+      if (resendResult.error) {
+        console.error('[AuthService] Error enviando email con Resend:', resendResult.error);
+      }
+    } catch (err) {
+      console.error('[AuthService] Excepción enviando email con Resend:', err);
+    }
+
     return { message: 'Si el email existe recibirás un correo' };
   }
- 
-  // =====================
+  
+// =====================
   // RESET PASSWORD
   // =====================
   async resetPassword(token: string, nuevaPassword: string) {
