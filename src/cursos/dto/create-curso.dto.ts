@@ -1,4 +1,4 @@
-import { IsInt, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateCursoDto {
   @IsString()
@@ -9,4 +9,9 @@ export class CreateCursoDto {
 
   @IsString()
   materia: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  orientacion?: string;
 }

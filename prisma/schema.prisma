@@ -36,6 +36,7 @@ model Curso {
   escuela         String
   anio            String
   materia         String
+  orientacion     String?
   existe          Boolean         @default(true)
   docenteId       Int
   alumnos         AlumnoCurso[]

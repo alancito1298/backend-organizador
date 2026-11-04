@@ -68,6 +68,7 @@ export class CursosService {
         escuela: dto.escuela,
         anio: dto.anio,
         materia: dto.materia,
+        orientacion: dto.orientacion?.trim() || null,
         docenteId,
       },
     });
