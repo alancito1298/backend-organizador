@@ -271,6 +271,7 @@ export class AuthService {
         [
           ...(process.env.GOOGLE_CLIENT_ID ?? '').split(','),
           '868455775736-8gvm8ad8kdj0206iifc2qka0043c5s46.apps.googleusercontent.com',
+          '868455775736-7th45kmgd6s9s06c0ssmiiktu74vloh4.apps.googleusercontent.com',
           '973174699212-l3j5ng16i134rioq6nnli3r4l18ocots.apps.googleusercontent.com',
         ]
           .map((id) => id.trim())
