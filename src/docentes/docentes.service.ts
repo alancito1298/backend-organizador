@@ -112,12 +112,18 @@ export class DocentesService {
   }
 
   async getContadorPublico() {
-    const ultimo = await this.prisma.docente.findFirst({
-      orderBy: { id: 'desc' },
-      select: { id: true },
-    });
+    const [ultimo, totalCount] = await Promise.all([
+      this.prisma.docente.findFirst({
+        orderBy: { id: 'desc' },
+        select: { id: true },
+      }),
+      this.prisma.docente.count({
+        where: { existe: true },
+      }),
+    ]);
+
     return {
-      total: ultimo?.id ?? 89,
+      total: Math.max(ultimo?.id ?? 0, totalCount, 100),
     };
   }
 }

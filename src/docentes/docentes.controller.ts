@@ -3,6 +3,7 @@ import {
     Controller,
     Delete,
     Get,
+    Header,
     Param,
     Post,
     Put,
@@ -17,9 +18,13 @@ import { Public } from '../auth/public.decorator';
 export class DocentesController {
   constructor(private readonly docentesService: DocentesService) {}
 
-  // Contador público de docentes registrados (último ID)
+  // Contador público de docentes registrados (último ID) - sin caché para actualización en vivo
   @Public()
   @Get('public/contador')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
+  @Header('Surrogate-Control', 'no-store')
   getContador() {
     return this.docentesService.getContadorPublico();
   }
